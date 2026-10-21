@@ -1,0 +1,19 @@
+# Normalise line endings: LF in the repository, native endings on checkout.
+* text=auto eol=lf
+
+# Shell scripts must stay LF, otherwise bash fails with "bad interpreter".
+*.sh text eol=lf
+
+# Windows scripts are executed by PowerShell/cmd.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets.
+*.ico binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.pdf binary
+*.db binary
+*.sqlite binary

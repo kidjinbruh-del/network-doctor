@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <style>
+    :root { --ink:#0f172a; --muted:#64748b; --line:#dbe3ee; --blue:#2563eb; --bg:#f5f8fc; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
+    .page { max-width:1040px; margin:0 auto; padding:38px 34px 50px; }
+    .brand { display:flex; align-items:center; gap:14px; margin-bottom:26px; }
+    .logo { width:50px; height:50px; border-radius:15px; background:var(--blue); color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:17px; letter-spacing:.5px; }
+    h1 { margin:0; font-size:28px; line-height:1.15; }
+    .sub { color:var(--muted); font-size:13px; margin-top:5px; }
+    .meta { display:flex; flex-wrap:wrap; gap:12px 28px; padding:15px 18px; background:white; border:1px solid var(--line); border-radius:12px; color:var(--muted); font-size:12px; }
+    .meta b { color:var(--ink); font-weight:600; }
+    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:18px 0; }
+    .card { background:white; border:1px solid var(--line); border-radius:12px; padding:15px 16px; }
+    .card .label { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.07em; }
+    .card .value { font-size:23px; font-weight:700; margin-top:6px; }
+    h2 { font-size:17px; margin:28px 0 10px; }
+    table { width:100%; border-collapse:collapse; background:white; border:1px solid var(--line); border-radius:12px; overflow:hidden; font-size:12px; }
+    th { text-align:left; background:#eef3fb; color:#475569; font-size:10px; text-transform:uppercase; letter-spacing:.06em; padding:10px 12px; }
+    td { padding:10px 12px; border-top:1px solid var(--line); vertical-align:top; }
+    tr:nth-child(even) td { background:#fafcff; }
+    .muted { color:var(--muted); }
+    .ok { color:#059669; font-weight:600; }
+    .warn { color:#b45309; font-weight:600; }
+    .bad { color:#dc2626; font-weight:600; }
+    .score { display:flex; align-items:center; gap:8px; min-width:120px; }
+    .bar { height:7px; width:70px; border-radius:99px; background:#e2e8f0; overflow:hidden; }
+    .bar > span { display:block; height:100%; border-radius:99px; }
+    .state-red .bar > span { background:#ef4444; }
+    .state-yellow .bar > span { background:#f59e0b; }
+    .state-green .bar > span { background:#10b981; }
+    .callout { background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; padding:12px 15px; border-radius:12px; font-size:12px; line-height:1.55; }
+    .callout ul { margin:7px 0 0 18px; padding:0; }
+    .diagnosis { background:white; border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+    .diagnosis .verdict { font-size:14px; font-weight:700; margin-bottom:10px; }
+    .diagnosis table { border:0; font-size:11px; }
+    .diagnosis th { padding:7px 9px; }
+    .diagnosis td { padding:7px 9px; }
+    .chart { background:white; border:1px solid var(--line); border-radius:12px; padding:12px; }
+    .chart img { width:100%; height:auto; display:block; }
+    .footer { margin-top:30px; color:var(--muted); font-size:11px; border-top:1px solid var(--line); padding-top:12px; }
+    @media (max-width:760px) { .grid { grid-template-columns:repeat(2,1fr); } .page { padding:22px 16px; } }
+    @media print { body { background:white; } .page { max-width:none; padding:0; } .card, table, .chart { break-inside:avoid; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="brand">
+    <div class="logo">ND</div>
+    <div>
+      <h1>Network Doctor</h1>
+      <div class="sub">{{ title }}</div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <div>Снимок: <b>{{ snapshot_label }}</b></div>
+    <div>Роутер: <b>{{ router }}</b></div>
+    <div>Хост: <b>{{ host }}</b></div>
+    <div>Время: <b>{{ collected_at }}</b></div>
+    <div>Сформирован: <b>{{ generated_at }}</b></div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div class="label">Клиенты</div><div class="value">{{ stats.clients }}</div></div>
+    <div class="card"><div class="label">Средний сигнал</div><div class="value">{{ stats.signal_avg if stats.signal_avg is not none else "—" }} <small>dBm</small></div></div>
+    <div class="card"><div class="label">Средний SNR</div><div class="value">{{ stats.snr_avg if stats.snr_avg is not none else "—" }} <small>dB</small></div></div>
+    <div class="card"><div class="label">Шум</div><div class="value">{{ stats.noise if stats.noise is not none else "—" }} <small>dBm</small></div></div>
+  </div>
+
+  {% if deviations %}
+  <h2>Отклонения от эталона</h2>
+  <div class="callout">
+    <ul>{% for item in deviations %}<li>{{ item }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+
+  {% if diagnosis %}
+  <h2>Диагностика</h2>
+  <div class="diagnosis">
+    <div class="verdict">{{ diagnosis.verdict }}</div>
+    <table>
+      <thead><tr><th>Проверка</th><th>Статус</th><th>Результат</th></tr></thead>
+      <tbody>
+      {% for check in diagnosis.checks %}
+        <tr>
+          <td>{{ check.name }}</td>
+          <td class="{{ 'bad' if check.status == 'fail' else 'warn' if check.status in ('warn', 'unknown') else 'ok' }}">{{ check.status }}</td>
+          <td>{{ check.summary }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if diagnosis.actions %}
+    <ul>{% for action in diagnosis.actions %}<li>{{ action }}</li>{% endfor %}</ul>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <h2>Проблемные клиенты</h2>
+  {% if problems %}
+  <table>
+    <thead><tr><th>Клиент</th><th>Интерфейс</th><th>Сигнал</th><th>SNR</th><th>CCQ</th><th>Health</th><th>Причины</th></tr></thead>
+    <tbody>
+    {% for item in problems %}
+      <tr class="state-{{ item.health.state }}">
+        <td><b>{{ item.mac }}</b></td>
+        <td>{{ item.interface }}</td>
+        <td>{{ item.signal_dbm if item.signal_dbm is not none else "—" }} dBm</td>
+        <td>{{ item.snr_db if item.snr_db is not none else "—" }} dB</td>
+        <td>{{ item.ccq if item.ccq is not none else "—" }}%</td>
+        <td><div class="score"><span class="{{ item.health.state }}">{{ item.health.score }}</span><div class="bar"><span style="width:{{ item.health.score }}%"></span></div></div></td>
+        <td>{{ item.health.reasons|join("; ") if item.health.reasons else "—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="callout ok">Критичных проблем не выявлено: все клиенты в зелёной зоне.</div>
+  {% endif %}
+
+  <h2>Сравнение показателей</h2>
+  <table>
+    <thead><tr><th>Параметр</th><th>Текущий</th><th>{{ compare_label }}</th><th>Разница</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr><td>{{ row.name }}</td><td>{{ row.office }}</td><td>{{ row.lab }}</td><td>{{ row.difference }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Шум эфира</h2>
+  <div class="chart"><img src="{{ chart_data_uri }}" alt="График шума"></div>
+
+  <h2>Рекомендации</h2>
+  <div class="callout">
+    <ul>{% for item in recommendations %}<li>{{ item }}</li>{% endfor %}</ul>
+  </div>
+
+  {% if warnings %}
+  <h2>Предупреждения сбора</h2>
+  <div class="callout warn">
+    <ul>{% for item in warnings %}<li>{{ item }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+
+  <div class="footer">Network Doctor · отчёт сформирован автоматически · данные MikroTik RouterOS</div>
+</div>
+</body>
+</html>

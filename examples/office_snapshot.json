@@ -1,0 +1,160 @@
+{
+  "schema_version": 2,
+  "meta": {
+    "snapshot_type": "office",
+    "snapshot_label": "Офис",
+    "collected_at": "2026-10-22T01:45:00+03:00",
+    "host": "10.10.10.1",
+    "router_identity": "Mikrotik-office",
+    "router_version": "7.21.4",
+    "router_board": "L009UiGS",
+    "demo": false
+  },
+  "topology": {
+    "mikrotik": {
+      "host": "10.10.10.1",
+      "identity": "Mikrotik-office",
+      "version": "7.21.4",
+      "board": "L009UiGS",
+      "lan_ip": "10.10.10.1/24",
+      "lan_subnet": "10.10.10.0/24",
+      "wan_interface": "pppoe-out1",
+      "default_route": {
+        "present": true,
+        "active": true,
+        "gateway": "pppoe-out1"
+      }
+    },
+    "keenetic": {
+      "ip": "10.10.10.10",
+      "wan_ip": "10.10.10.10",
+      "mac": "50:ff:20:00:00:02",
+      "lan_ip": "192.168.1.1",
+      "lan_subnet": "192.168.1.0/24",
+      "ssid": "OFFICE-WIFI",
+      "channel": "4",
+      "reachable": true,
+      "management_ports": {
+        "22": false,
+        "80": false,
+        "443": false,
+        "8291": false
+      }
+    },
+    "subnets": [
+      {
+        "network": "10.10.10.0/24",
+        "gateway": "10.10.10.1",
+        "interface": "bridge"
+      },
+      {
+        "network": "192.168.1.0/24",
+        "gateway": "192.168.1.1",
+        "interface": "Keenetic LAN/WiFi"
+      }
+    ]
+  },
+  "wireless_scan": [
+    {"channel": 4, "frequency": 2427, "ssid": "", "bssid": null, "signal": 100, "security": null, "hidden": true},
+    {"channel": 4, "frequency": 2427, "ssid": "OFFICE-WIFI", "bssid": null, "signal": 100, "security": null, "hidden": false},
+    {"channel": 4, "frequency": 2427, "ssid": "OFFICE-TEST", "bssid": null, "signal": 100, "security": null, "hidden": false},
+    {"channel": 2, "frequency": 2417, "ssid": "", "bssid": null, "signal": 85, "security": null, "hidden": true},
+    {"channel": 2, "frequency": 2417, "ssid": "OFFICE-NEIGHBOR", "bssid": null, "signal": 85, "security": null, "hidden": false},
+    {"channel": 9, "frequency": 2452, "ssid": "OFFICE-AP-1", "bssid": "50:ff:20:00:00:03", "signal": 54, "security": null, "hidden": false},
+    {"channel": 9, "frequency": 2452, "ssid": "OFFICE-DIRECT", "bssid": null, "signal": 32, "security": null, "hidden": false},
+    {"channel": 1, "frequency": 2412, "ssid": "OFFICE-AP-2", "bssid": "50:ff:20:00:00:04", "signal": 87, "security": null, "hidden": false},
+    {"channel": 8, "frequency": 2447, "ssid": "OFFICE-GUEST", "bssid": null, "signal": 20, "security": null, "hidden": false},
+    {"channel": 11, "frequency": 2462, "ssid": "OFFICE-TPLINK", "bssid": null, "signal": 25, "security": null, "hidden": false},
+    {"channel": 52, "frequency": 5260, "ssid": "", "bssid": null, "signal": 95, "security": "WPA2/WPA3", "hidden": true},
+    {"channel": 48, "frequency": 5240, "ssid": "OFFICE-NEIGHBOR", "bssid": null, "signal": 59, "security": null, "hidden": false},
+    {"channel": 48, "frequency": 5240, "ssid": "", "bssid": null, "signal": 59, "security": null, "hidden": true}
+  ],
+  "clients": [
+    {"mac": "50:ff:20:00:00:01", "ip": "192.168.1.1", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Keenetic", "virtual": false},
+    {"mac": "10:ff:e0:4a:4f:7a", "ip": "192.168.1.10", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "", "virtual": false},
+    {"mac": "24:9a:d8:29:24:17", "ip": "192.168.1.40", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Yealink", "virtual": false},
+    {"mac": "08:9d:f4:32:ec:95", "ip": "192.168.1.46", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Intel", "virtual": false},
+    {"mac": "7a:d3:3d:52:b1:1a", "ip": "192.168.1.51", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "", "virtual": true, "virtual_reason": "локально назначенный MAC", "locally_administered": true},
+    {"mac": "50:ff:20:00:00:03", "ip": "192.168.1.52", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Keenetic", "virtual": false},
+    {"mac": "6a:0c:f4:6a:ad:ad", "ip": "192.168.1.62", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "", "virtual": true, "virtual_reason": "локально назначенный MAC", "locally_administered": true},
+    {"mac": "64:51:06:21:9a:58", "ip": "192.168.1.65", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "HP", "virtual": false},
+    {"mac": "4c:d5:77:ab:7a:2d", "ip": "192.168.1.70", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Chongqing Fugui", "virtual": false},
+    {"mac": "40:a8:f0:b5:e8:1b", "ip": "192.168.1.78", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "HP", "virtual": false},
+    {"mac": "00:e0:4f:15:42:b9", "ip": "192.168.1.80", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Cisco", "virtual": false},
+    {"mac": "90:09:17:6b:48:e7", "ip": "192.168.1.88", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Far-sighted mobile", "virtual": false},
+    {"mac": "9e:39:76:49:95:c8", "ip": "192.168.1.89", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "", "virtual": true, "virtual_reason": "локально назначенный MAC", "locally_administered": true},
+    {"mac": "d6:60:23:a5:78:e1", "ip": "192.168.1.91", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "", "virtual": true, "virtual_reason": "локально назначенный MAC", "locally_administered": true},
+    {"mac": "dc:04:5a:06:e4:68", "ip": "192.168.1.94", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "", "virtual": false},
+    {"mac": "ac:ba:c0:4a:af:f6", "ip": "192.168.1.119", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "", "virtual": false},
+    {"mac": "5e:47:37:9f:9c:b8", "ip": "192.168.1.121", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "", "virtual": true, "virtual_reason": "локально назначенный MAC", "locally_administered": true},
+    {"mac": "bc:24:11:8f:56:38", "ip": "192.168.1.131", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Proxmox VE", "virtual": true, "virtual_reason": "Proxmox VE MAC bc:24:11"},
+    {"mac": "74:56:3c:d9:fb:93", "ip": "192.168.1.133", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "GIGA-BYTE", "virtual": false},
+    {"mac": "bc:24:11:be:38:1e", "ip": "192.168.1.135", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Proxmox VE", "virtual": true, "virtual_reason": "Proxmox VE MAC bc:24:11"},
+    {"mac": "fe:8d:53:9f:fc:e8", "ip": "192.168.1.145", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "", "virtual": true, "virtual_reason": "локально назначенный MAC", "locally_administered": true},
+    {"mac": "50:ff:20:00:00:04", "ip": "192.168.1.147", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Keenetic", "virtual": false},
+    {"mac": "bc:24:11:e3:d1:ed", "ip": "192.168.1.150", "interface": "wlan1", "signal_dbm": null, "tx_ccq": null, "retry_pct": null, "vendor": "Proxmox VE", "virtual": true, "virtual_reason": "Proxmox VE MAC bc:24:11"}
+  ],
+  "health": {
+    "target": "8.8.8.8",
+    "samples": 42254,
+    "window_hours": 168,
+    "loss_pct": 7.6,
+    "loss_max_pct": 7.6,
+    "jitter_ms": 80.2,
+    "jitter_max_ms": 80.2,
+    "latency_ms": 225.0,
+    "latency_max_ms": 225.0,
+    "avg_loss_pct": 0.29,
+    "avg_jitter_ms": 18.3,
+    "avg_latency_ms": 58.7
+  },
+  "warnings": [
+    "К каналу 4 подключены три Keenetic с сигналом 100: OFFICE-WIFI, скрытая сеть и OFFICE-TEST.",
+    "Порты управления Keenetic 22/80/443/8291 закрыты.",
+    "В инвентаре три виртуальных MAC Proxmox bc:24:11 и шесть locally administered MAC.",
+    "Пиковые потери 7,6%, джиттер 80,2 мс, задержка 225 мс."
+  ],
+  "diagnostics": {
+    "default_route": {
+      "present": true,
+      "active": true,
+      "gateway": "pppoe-out1"
+    },
+    "nat": {
+      "bytes": 29071883,
+      "packets": 299472,
+      "delta_packets": 4172,
+      "growing": true,
+      "rules": 1
+    },
+    "arp": [
+      {
+        "address": "10.10.10.10",
+        "mac": "50:ff:20:00:00:02",
+        "interface": "bridge",
+        "complete": true,
+        "invalid": false
+      }
+    ],
+    "keenetic": {
+      "ip": "10.10.10.10",
+      "arp": true,
+      "ports": {
+        "22": false,
+        "80": false,
+        "443": false,
+        "8291": false
+      }
+    }
+  },
+  "registration_table": [],
+  "wireless_interfaces": [],
+  "logs": [],
+  "disconnect_events": [],
+  "spectral_scan": {
+    "noise_floor_avg": null,
+    "samples": 0,
+    "method": "none",
+    "raw": ""
+  }
+}

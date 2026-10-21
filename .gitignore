@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+.eggs/
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Tests and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local data: snapshots, SQLite history, profiles
+snapshots/
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+profiles.json
+secrets.json
+
+# Logs
+*.log
+logs/
+
+# Secrets and credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.secret
+*.credentials
+
+# Generated reports and exports
+reports/
+export/
+*.pdf
+!docs/**/*.pdf
+*.csv
+!examples/**/*.csv
+
+# Build artifacts
+build/
+dist/
+*.spec
+*.exe
+*.msi
+*.AppImage
+*.deb
+*.rpm
+
+# Misc
+*.bak
+*.tmp
+*.orig
+
+# Local tooling
+.deep-copilot/
