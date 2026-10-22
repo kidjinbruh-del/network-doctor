@@ -50,16 +50,42 @@
 
 ## Скриншоты / Screenshots
 
-<!-- TODO: добавить скриншоты UI -->
-<!-- TODO: add UI screenshots -->
+Скриншоты снимаются с живого интерфейса скриптом `tools/screenshots.py`
+(нужен `pillow` только для разработки).
+*Screenshots are captured from the live UI by `tools/screenshots.py`.*
 
-| Вкладка / Tab | Скриншот / Screenshot |
-| -------------- | --------------------- |
-| Подключение / Connection | _(pending)_ |
-| Диагностика / Diagnostics | _(pending)_ |
-| Здоровье / Health | _(pending)_ |
-| Мониторинг / Monitoring | _(pending)_ |
-| Сравнение / Comparison | _(pending)_ |
+### Диагностика / Diagnostics
+
+Вердикт «почему нет интернета» по снимку инцидента.
+
+![Диагностика: вердикт по инциденту](docs/screenshots/diagnostics.png)
+
+### Здоровье / Health
+
+Client Health Score по каждому клиенту: сигнал, SNR, CCQ, retry, счёт.
+
+![Client Health Score](docs/screenshots/health.png)
+
+<details>
+<summary>Ещё скриншоты / More screenshots</summary>
+
+### Подключение / Connection
+
+![Подключение к роутеру](docs/screenshots/connection.png)
+
+### Мониторинг / Monitoring
+
+Фоновый сторож с ICMP-зондом и история клиента.
+
+![Фоновый мониторинг и график клиента](docs/screenshots/monitoring.png)
+
+### Сравнение / Comparison
+
+Офис против лаборатории с расчётом разницы.
+
+![Сравнение снимков офиса и лаборатории](docs/screenshots/comparison.png)
+
+</details>
 
 ## Установка / Installation
 
@@ -156,8 +182,10 @@ network-doctor/
 │   └── utils.py                # вспомогательные функции
 ├── assets/                     # иконки приложения
 ├── docs/snapshot-schema.md     # формат снимка v2 и калибровка
+├── docs/screenshots/           # скриншоты интерфейса для README
 ├── examples/office_snapshot.json
 ├── linux/                      # запуск, установка, .desktop, иконка
+├── tools/screenshots.py        # автогенерация скриншотов (нужен pillow)
 ├── windows/                    # установка ярлыка Windows
 └── tests/                      # 65 тестов (unittest + pytest)
 ```

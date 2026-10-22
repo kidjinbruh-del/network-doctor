@@ -65,7 +65,16 @@ def timeline_figure(
 
     axis.set_title(f"История клиента {mac}", color=_TEXT, fontsize=11, loc="left")
     if handles:
-        axis.legend(handles, names, facecolor=_BG, edgecolor=_GRID, labelcolor=_TEXT, fontsize=8)
+        axis.legend(
+            handles,
+            names,
+            loc="lower left",
+            facecolor=_BG,
+            edgecolor=_GRID,
+            labelcolor=_TEXT,
+            fontsize=8,
+            framealpha=0.9,
+        )
     figure.tight_layout()
     return figure
 

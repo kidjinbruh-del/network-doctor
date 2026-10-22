@@ -32,7 +32,7 @@ class DemoTests(unittest.TestCase):
 
             self.assertEqual(snapshot["schema_version"], 2)
             self.assertEqual(validate_snapshot(snapshot), [])
-            self.assertEqual(len(snapshot["clients"]), 5)
+            self.assertEqual(len(snapshot["clients"]), 6)
             self.assertTrue(snapshot["wireless_scan"])
             self.assertEqual(snapshot["health"]["source"], "demo")
 
@@ -46,7 +46,7 @@ class DemoTests(unittest.TestCase):
             )
 
             self.assertEqual(rows[0].name, "Клиенты")
-            self.assertEqual(rows[0].office, "5")
+            self.assertEqual(rows[0].office, "6")
             self.assertEqual(rows[0].lab, "5")
             self.assertNotEqual(rows[1].office, rows[1].lab)
 
