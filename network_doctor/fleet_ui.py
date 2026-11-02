@@ -38,6 +38,11 @@ class FleetPanel(ctk.CTkFrame):
             background="#24324a",
             foreground="#e5edf8",
             padding=7,
+            relief="flat",
+            borderwidth=0,
+            bordercolor="#24324a",
+            lightcolor="#24324a",
+            darkcolor="#24324a",
         )
         style.map("Equipment.Treeview", background=[("selected", "#234c85")])
         self.store = FleetStore(app_data_dir() / "equipment.sqlite")
@@ -57,7 +62,7 @@ class FleetPanel(ctk.CTkFrame):
             wraplength=950,
         )
         self.status.grid(row=0, column=0, columnspan=2, sticky="ew", padx=12, pady=8)
-        editor = ctk.CTkScrollableFrame(self, width=300)
+        editor = ctk.CTkScrollableFrame(self, width=300, fg_color="#162033")
         editor.grid(row=1, column=0, sticky="ns", padx=(8, 12), pady=8)
         editor.grid_columnconfigure(0, weight=1)
         self.selector = ctk.CTkComboBox(
@@ -69,11 +74,8 @@ class FleetPanel(ctk.CTkFrame):
             ("id", "ID (латиница)", "switch-1"),
             ("name", "Название", "Коммутатор"),
             ("host", "IP / DNS", ""),
-            ("site", "Площадка", ""),
-            ("owner", "Ответственный", ""),
             ("port", "SNMP порт", "161"),
             ("username", "SNMPv3 пользователь", ""),
-            ("expected_ports", "Ожидаемые ifIndex через запятую", ""),
         ]:
             ctk.CTkLabel(editor, text=label, anchor="w").grid(
                 row=row, column=0, sticky="ew"
@@ -114,6 +116,19 @@ class FleetPanel(ctk.CTkFrame):
             text_color="#9cabbd",
         ).grid(row=row, column=0, sticky="ew")
         row += 1
+        for key, label in [
+            ("site", "Площадка"),
+            ("owner", "Ответственный"),
+            ("expected_ports", "Ожидаемые ifIndex через запятую"),
+        ]:
+            ctk.CTkLabel(editor, text=label, anchor="w").grid(
+                row=row, column=0, sticky="ew"
+            )
+            row += 1
+            entry = ctk.CTkEntry(editor, width=280)
+            entry.grid(row=row, column=0, sticky="ew", pady=(0, 6))
+            self.entries[key] = entry
+            row += 1
         for key, default in [
             ("community_env", "ND_SNMP_COMMUNITY"),
             ("auth_env", "ND_SNMP_AUTH"),
@@ -154,7 +169,7 @@ class FleetPanel(ctk.CTkFrame):
         content.grid(row=1, column=1, sticky="nsew", padx=(0, 8), pady=8)
         content.grid_rowconfigure(2, weight=1)
         content.grid_columnconfigure(0, weight=1)
-        toolbar = ctk.CTkFrame(content)
+        toolbar = ctk.CTkFrame(content, fg_color="#162033")
         toolbar.grid(row=0, column=0, sticky="ew", pady=(0, 8))
         for index, (label, fn) in enumerate(
             [
@@ -166,9 +181,12 @@ class FleetPanel(ctk.CTkFrame):
             ctk.CTkButton(toolbar, text=label, command=fn, width=135).grid(
                 row=0, column=index, padx=4, pady=6
             )
-        self.interval = ctk.CTkEntry(toolbar, width=65)
+        interval_box = ctk.CTkFrame(toolbar, fg_color="transparent")
+        interval_box.grid(row=1, column=0, padx=4, pady=6, sticky="w")
+        ctk.CTkLabel(interval_box, text="Сек:").grid(row=0, column=0, padx=4)
+        self.interval = ctk.CTkEntry(interval_box, width=65)
         self.interval.insert(0, "60")
-        self.interval.grid(row=1, column=0, padx=4, pady=6, sticky="w")
+        self.interval.grid(row=0, column=1)
         self.toggle = ctk.CTkButton(
             toolbar, text="Мониторинг выключен", command=self.toggle_monitor
         )
@@ -178,7 +196,7 @@ class FleetPanel(ctk.CTkFrame):
         )
         self.inventory.master.grid(row=1, column=0, sticky="ew", pady=(0, 8))
         self.inventory.bind("<<TreeviewSelect>>", self.select_device)
-        tabs = ctk.CTkTabview(content)
+        tabs = ctk.CTkTabview(content, fg_color="#162033")
         tabs.grid(row=2, column=0, sticky="nsew")
         ports = tabs.add("Порты")
         ports.grid_rowconfigure(0, weight=1)
@@ -236,7 +254,7 @@ class FleetPanel(ctk.CTkFrame):
             incidents, ("id", "device", "title", "status"), height=8
         )
         self.incidents.master.grid(row=0, column=0, sticky="nsew")
-        buttons = ctk.CTkFrame(incidents)
+        buttons = ctk.CTkFrame(incidents, fg_color="#162033")
         buttons.grid(row=1, column=0, sticky="ew")
         for index, (label, action) in enumerate(
             [("Принять", "acknowledge"), ("Закрыть", "resolve")]
@@ -282,7 +300,17 @@ class FleetPanel(ctk.CTkFrame):
         }
         for key in columns:
             tree.heading(key, text=labels.get(key, key))
-            tree.column(key, width=100, minwidth=55, stretch=True)
+            widths = {
+                "index": 55,
+                "name": 120,
+                "link": 100,
+                "Mbps": 65,
+                "RX Mbps": 85,
+                "TX Mbps": 85,
+                "load %": 65,
+                "errors Δ": 80,
+            }
+            tree.column(key, width=widths.get(key, 100), minwidth=45, stretch=True)
         scroll = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
         horizontal = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview)
         tree.configure(yscrollcommand=scroll.set, xscrollcommand=horizontal.set)
@@ -464,6 +492,10 @@ class FleetPanel(ctk.CTkFrame):
             + [p["name"] + " [" + p["id"] + "]" for p in profiles]
         )
         active = {p["id"] for p in profiles}
+        for profile in profiles:
+            if profile["id"] == self.selected:
+                self.selector.set(f"{profile['name']} [{profile['id']}]")
+                break
         for ident in self.inventory.get_children():
             if ident not in active:
                 self.inventory.delete(ident)
