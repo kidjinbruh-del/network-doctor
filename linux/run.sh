@@ -15,9 +15,9 @@ message() {
     fi
 }
 
-if [ ! -x "$PY" ] || ! "$PY" -c "import customtkinter, routeros_api, jinja2, matplotlib, reportlab, keyring" >/dev/null 2>&1; then
+if [ ! -x "$PY" ] || ! "$PY" -c "import customtkinter, routeros_api, jinja2, matplotlib, reportlab, keyring, pysnmp, cryptography" >/dev/null 2>&1; then
     "$APP_DIR/linux/setup.sh" >>"$LOG" 2>&1
-    if [ ! -x "$PY" ] || ! "$PY" -c "import customtkinter, routeros_api, jinja2, matplotlib, reportlab, keyring" >/dev/null 2>&1; then
+    if [ ! -x "$PY" ] || ! "$PY" -c "import customtkinter, routeros_api, jinja2, matplotlib, reportlab, keyring, pysnmp, cryptography" >/dev/null 2>&1; then
         message "Не удалось подготовить Python-окружение. Лог: $LOG"
         exit 1
     fi

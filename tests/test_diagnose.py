@@ -22,7 +22,7 @@ def test_incident_verdict_is_behind_keenetic() -> None:
     diagnosis = diagnose_no_internet(load_sample())
 
     assert diagnosis.verdict == VERDICT_BEHIND_KEENETIC
-    assert diagnosis.severity == "critical"
+    assert diagnosis.severity == "warning"
     assert any(check.name.startswith("ARP до Keenetic") and check.status == "ok" for check in diagnosis.checks)
     assert any(check.name == "Счётчики NAT" and check.status == "ok" for check in diagnosis.checks)
 
@@ -36,7 +36,7 @@ def test_missing_arp_means_keenetic_is_down() -> None:
     diagnosis = diagnose_no_internet(snapshot)
 
     assert diagnosis.verdict == VERDICT_KEENETIC_DOWN
-    assert diagnosis.severity == "critical"
+    assert diagnosis.severity == "warning"
 
 
 def test_missing_default_route_has_priority() -> None:
@@ -72,8 +72,8 @@ def test_nat_failure_is_reported_when_keenetic_ports_open() -> None:
 
     diagnosis = diagnose_no_internet(snapshot)
 
-    assert "NAT MikroTik не пропускает" in diagnosis.verdict
-    assert any(check.name == "Счётчики NAT" and check.status == "fail" for check in diagnosis.checks)
+    assert "Счётчик NAT не вырос" in diagnosis.verdict
+    assert any(check.name == "Счётчики NAT" and check.status == "warn" for check in diagnosis.checks)
 
 
 def test_closed_ports_keep_incident_verdict_even_if_nat_is_flat() -> None:
@@ -84,7 +84,7 @@ def test_closed_ports_keep_incident_verdict_even_if_nat_is_flat() -> None:
     diagnosis = diagnose_no_internet(snapshot)
 
     assert diagnosis.verdict == VERDICT_BEHIND_KEENETIC
-    assert any(check.name == "Счётчики NAT" and check.status == "fail" for check in diagnosis.checks)
+    assert any(check.name == "Счётчики NAT" and check.status == "warn" for check in diagnosis.checks)
     assert any("NAT MikroTik не растёт" in action for action in diagnosis.actions)
 
 
@@ -110,3 +110,9 @@ def test_missing_evidence_does_not_crash() -> None:
 
     assert "Не удалось определить Keenetic" in diagnosis.verdict
     assert all(check.status in {"ok", "warn", "fail", "unknown"} for check in diagnosis.checks)
+
+
+def test_missing_route_collection_is_not_reported_as_router_failure():
+    diagnosis=diagnose_no_internet({})
+    assert diagnosis.severity=='warning'
+    assert diagnosis.checks[0].status=='unknown'

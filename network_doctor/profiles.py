@@ -15,11 +15,12 @@ class ConnectionProfile:
     """Serializable connection settings without the secret itself."""
 
     name: str
-    connection_type: str = "api"
+    connection_type: str = "api_ssl"
     host: str = ""
-    port: int = 8728
+    port: int = 8729
     username: str = "admin"
-    ssl_verify: bool = False
+    ssl_verify: bool = True
+    ca_file: str = ""
     ssh_host: str = ""
     ssh_port: int = 22
     ssh_user: str = ""
@@ -59,14 +60,19 @@ class ProfileStore:
 
     def save(self, profiles: list[ConnectionProfile]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps(
+        import os,tempfile
+        payload = json.dumps(
                 {"profiles": [asdict(profile) for profile in profiles]},
                 ensure_ascii=False,
                 indent=2,
-            ),
-            encoding="utf-8",
-        )
+            )
+        temporary=None
+        try:
+            with tempfile.NamedTemporaryFile(mode='w',encoding='utf-8',dir=self.path.parent,delete=False,prefix='.profiles-') as stream:
+                temporary=Path(stream.name);stream.write(payload);stream.flush();os.fsync(stream.fileno())
+            os.replace(temporary,self.path)
+        finally:
+            if temporary is not None and temporary.exists():temporary.unlink()
 
     def upsert(self, profile: ConnectionProfile) -> None:
         profiles = [item for item in self.load() if item.name != profile.name]

@@ -9,14 +9,14 @@ if ! command -v "$PYTHON" >/dev/null 2>&1; then
     echo "python3 не найден. Установите Python 3."
     exit 1
 fi
+"$PYTHON" -c 'import sys; assert sys.version_info >= (3,11), "Python 3.11+ required"'
 
 if [ ! -x ".venv/bin/python" ]; then
-    rm -rf .venv
-    "$PYTHON" -m venv --without-pip .venv
+    "$PYTHON" -m venv .venv
 fi
 
 if ! .venv/bin/python -m pip --version >/dev/null 2>&1; then
-    "$PYTHON" -m pip --python .venv install --upgrade pip
+    .venv/bin/python -m ensurepip
 fi
 
 .venv/bin/python -m pip install -r requirements.txt

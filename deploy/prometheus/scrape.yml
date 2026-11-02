@@ -1,0 +1,10 @@
+# Merge into Prometheus running on the same host as Network Doctor.
+scrape_configs:
+  - job_name: network-doctor
+    scrape_interval: 15s
+    metrics_path: /metrics
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/secrets/network-doctor-token
+    static_configs:
+      - targets: ['127.0.0.1:8776']

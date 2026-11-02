@@ -444,8 +444,8 @@ def virtual_mac_reason(mac: Any, interface: Any = "") -> str | None:
         return None
     if first & 0x01:
         return "multicast MAC"
-    if first & 0x02:
-        return "локально назначенный MAC"
+    # Locally administered addresses include real phones with privacy MACs.
+    # They do not prove virtualization and must not be discarded.
     return None
 
 
@@ -465,6 +465,9 @@ def filter_virtual_clients(
     reasons: dict[str, int] = {}
     for device in devices:
         item = dict(device)
+        normalized_mac = _normalize_mac(item.get(mac_key))
+        try:item["locally_administered"] = bool(int(normalized_mac.split(":")[0],16) & 2)
+        except ValueError:item["locally_administered"] = False
         reason = virtual_mac_reason(item.get(mac_key), item.get(interface_key))
         if reason is None:
             item["virtual"] = False

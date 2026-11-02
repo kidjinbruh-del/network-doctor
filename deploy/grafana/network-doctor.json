@@ -1,0 +1,16 @@
+{
+  "uid": "network-doctor-fleet",
+  "title": "Network Doctor · Equipment",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {"from": "now-1h", "to": "now"},
+  "__inputs": [{"name": "DS_PROMETHEUS", "label": "Prometheus", "type": "datasource", "pluginId": "prometheus", "pluginName": "Prometheus"}],
+  "panels": [
+    {"id": 1, "title": "Successful recent device polls", "type": "stat", "gridPos": {"x": 0, "y": 0, "w": 12, "h": 7}, "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}, "targets": [{"refId": "A", "expr": "nd_equipment_up{job=\"network-doctor\"}", "legendFormat": "{{device}}"}], "fieldConfig": {"defaults": {"min": 0, "max": 1, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}}, "overrides": []}},
+    {"id": 2, "title": "Open / acknowledged incidents (latest 500)", "type": "stat", "gridPos": {"x": 12, "y": 0, "w": 12, "h": 7}, "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}, "targets": [{"refId": "A", "expr": "nd_incidents{job=\"network-doctor\",status=~\"open|acknowledged\"}", "legendFormat": "{{status}}"}]},
+    {"id": 3, "title": "Receive (64-bit counters only)", "type": "timeseries", "gridPos": {"x": 0, "y": 7, "w": 12, "h": 9}, "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}, "targets": [{"refId": "A", "expr": "rate(nd_port_rx_bytes_total{job=\"network-doctor\"}[5m])*8", "legendFormat": "{{device}} {{name}}"}], "fieldConfig": {"defaults": {"unit": "bps", "min": 0}, "overrides": []}},
+    {"id": 4, "title": "Transmit (64-bit counters only)", "type": "timeseries", "gridPos": {"x": 12, "y": 7, "w": 12, "h": 9}, "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}, "targets": [{"refId": "A", "expr": "rate(nd_port_tx_bytes_total{job=\"network-doctor\"}[5m])*8", "legendFormat": "{{device}} {{name}}"}], "fieldConfig": {"defaults": {"unit": "bps", "min": 0}, "overrides": []}}
+  ]
+}

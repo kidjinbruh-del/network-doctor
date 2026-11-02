@@ -3,6 +3,7 @@ from __future__ import annotations
 import ipaddress
 import re
 import socket
+import ssl
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -51,6 +52,8 @@ class MikroTikClient:
         timeout: int = 8,
         use_ssl: bool = False,
         ssl_verify: bool = False,
+        active_tests: bool = False,
+        ca_file: str = "",
     ) -> None:
         self.host = host.strip()
         self.username = username.strip()
@@ -59,6 +62,8 @@ class MikroTikClient:
         self.timeout = timeout
         self.use_ssl = use_ssl
         self.ssl_verify = ssl_verify
+        self.active_tests = active_tests
+        self.ca_file = ca_file
         self._pool: RouterOsApiPool | None = None
         self._api: Any = None
 
@@ -82,6 +87,7 @@ class MikroTikClient:
                 use_ssl=self.use_ssl,
                 ssl_verify=self.ssl_verify,
                 ssl_verify_hostname=self.ssl_verify,
+                ssl_context=ssl.create_default_context(cafile=self.ca_file or None) if self.use_ssl and self.ssl_verify else None,
             )
             self._pool.set_timeout(self.timeout)
             self._api = self._pool.get_api()
@@ -205,7 +211,7 @@ class MikroTikClient:
             warnings.append(
                 "Порты управления Keenetic закрыты: "
                 + ", ".join(str(port) for port in closed_ports)
-                + ". Причина недоступности панели — за Keenetic."
+                + ". Закрытые порты не доказывают причину отсутствия интернета."
             )
 
         diagnostics = {
@@ -218,6 +224,7 @@ class MikroTikClient:
                 "ports": ports,
             },
         }
+        diagnostics['default_route']['known'] = not bool(route_error)
 
         health = {
             "target": "8.8.8.8",
@@ -497,6 +504,11 @@ class MikroTikClient:
                 "Spectral-scan пропущен: wireless-интерфейсы не найдены."
             ]
 
+        if not self.active_tests:
+            return SpectralResult(None, 0, "disabled"), [
+                "Активный spectral-scan отключён: он может влиять на радио. Доступен только при явном active_tests=True."
+            ]
+
         interfaces: list[tuple[str, str]] = []
         seen: set[tuple[str, str]] = set()
         for item in wireless:
@@ -627,7 +639,7 @@ class MikroTikClient:
             return f"Не удалось определить адрес {self.host}."
         if "invalid user" in lowered or "login" in lowered or "password" in lowered:
             return "Роутер отклонил логин или пароль."
-        return message
+        return "Ошибка RouterOS API. Проверьте транспорт, права чтения и параметры подключения."
 
 
 def _channel_from_text(value: str) -> int | None:

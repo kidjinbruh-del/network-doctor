@@ -62,13 +62,13 @@ def test_reports_include_diagnosis_block(tmp_path) -> None:
     context = build_report_context(snapshot, rows)
     series = [("2026-10-22T01:00:00+03:00", -82.0)]
 
-    assert context["diagnosis"]["verdict"].startswith("Проблема за Keenetic")
+    assert "Причина отсутствия интернета не установлена" in context["diagnosis"]["verdict"]
 
     html_path = tmp_path / "incident.html"
     write_html(html_path, context, series)
     html = html_path.read_text(encoding="utf-8")
     assert "Диагностика" in html
-    assert "Проблема за Keenetic" in html
+    assert "Причина отсутствия интернета не установлена" in html
 
     pdf_path = tmp_path / "incident.pdf"
     write_pdf(pdf_path, context, series)

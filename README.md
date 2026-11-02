@@ -1,22 +1,51 @@
-# Network Doctor Enterprise
+# Network Doctor 3.0 — оборудование и диагностика
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-65%20passed-success.svg)
 ![CI](https://github.com/kidjinbruh-del/network-doctor/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)
 
-Диагностика Wi-Fi сети по данным MikroTik (RouterOS API) и Keenetic: инвентарь
-клиентов, Health Score, поиск причины отсутствия интернета, история в SQLite и
-экспорт отчётов в HTML/PDF.
+Network Doctor для Windows и Linux: общий парк управляемых устройств через
+SNMPv3 authPriv / SNMPv2c, отдельный ICMP-режим и сохранённые инструменты RouterOS Wi-Fi.
 
-> Wi-Fi network diagnostics for MikroTik (RouterOS API) and Keenetic gear:
-> client inventory, Health Score, "no internet" root-cause analysis, SQLite
-> history and HTML/PDF reports.
+- **Оборудование**: D-Link, MikroTik, Cisco, TP-Link, Huawei, HPE/Aruba,
+  Juniper, Ubiquiti, NETGEAR, Zyxel, Fortinet и другие агенты стандартных MIB.
+- **Порты и VLAN**: IF-MIB/ifXTable, скорости по двум измерениям, ошибки,
+  LLDP, ARP/FDB и статические VLAN Q-BRIDGE-MIB.
+- **История и инциденты**: SQLite, ответственные/площадки, ожидаемые рабочие порты,
+  дедупликация, подтверждение и восстановление; фоновые опросы с ограничениями.
+- **Отчёты и метрики**: офлайн HTML/JSON, защищённый локальный Prometheus endpoint,
+  [пример Grafana](deploy/grafana/network-doctor.json).
+- **Безопасный старт**: сеть не сканируется, устройства не опрашиваются без команды,
+  SNMPv3 по умолчанию; пароли только в памяти, окружении или системном keyring.
+
+[Руководство по оборудованию и ограничениям](docs/EQUIPMENT.md) ·
+[Быстрый старт](#быстрый-старт-30) · [Изменения](CHANGELOG.md).
+
+## Быстрый старт 3.0
+
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\python.exe; Linux: .venv/bin/python
+python -m pip install -r requirements.txt
+python app.py
+```
+
+После создания окружения используйте его Python (либо активируйте venv).
+В Linux нужен Tk: `sudo apt-get install python3-venv python3-tk iputils-ping`.
+В новом разделе «Оборудование» задайте IP, SNMPv3 пользователя и секреты сеанса,
+затем нажмите «Опросить выбранное». Это чтение, а не изменение конфигурации.
+Для неменеджируемого/неподдерживающего SNMP устройства доступен только ICMP.
+
+**Область совместимости:** поддержка стандартных MIB и идентификация производителя
+не означают проверку каждой модели/прошивки. PoE, фирменные Wi-Fi контроллеры,
+температуры и настройка оборудования не объявляются универсально поддержанными.
+Тесты используют локальный агент с синтетическими данными, включая настоящий UDP
+и SNMPv3 с аутентификацией/шифрованием; физические устройства отдельно не испытывались.
 
 ---
 
-## Возможности / Features
+## Инструменты RouterOS / Wi-Fi (совместимость)
 
 - **Подключение к MikroTik** — RouterOS `API`, `API-SSL` или SSH-туннель, профили
   подключения с хранением пароля в системном keyring.
@@ -25,12 +54,12 @@
   точки спектра из логов MikroTik.
   *Spectral-scan parsing: noise floor, channels and raw spectrum points.*
 - **Фильтр виртуальных MAC** — отсеивает QEMU (`52:54:00`), Proxmox
-  (`bc:24:11`), локально назначенные адреса и интерфейсы `virbr*`, `vnet*`,
+  (`bc:24:11`), интерфейсы `virbr*`, `vnet*`,
   `veth*`, `docker*`.
-  *Virtual MAC filtering for QEMU, Proxmox, Docker and locally administered addresses.*
+  *Virtualization hints are kept separate from privacy/randomized MAC addresses.*
 - **Диагностика «нет интернета»** — маршрут по умолчанию, рост счётчиков NAT,
-  ARP до Keenetic и доступность портов управления `22/80/443/8291` с вердиктом
-  «проблема за Keenetic».
+  ARP до Keenetic и доступность портов управления `22/80/443/8291` с указанием
+  подтверждённых фактов и неизвестных причин, без автоматического обвинения Keenetic.
   *No-internet root cause: default route, NAT counters, ARP and management ports.*
 - **Health Score клиента** — потери, джиттер, задержка, сигнал, SNR, CCQ и retry
   с цветовой шкалой (красный `<50`, жёлтый `50–80`, зелёный `>80`).
@@ -48,7 +77,9 @@
   прокрутка, ярлыки с иконкой для Windows и Linux.
   *CustomTkinter GUI with adaptive window, scrolling and desktop shortcuts.*
 
-## Скриншоты / Screenshots
+## Скриншоты предыдущего интерфейса (v2)
+
+Скриншоты ниже исторические. Новый раздел v3 проверяется в CI; артефакт `network-doctor-gui-and-snmp` содержит свежий снимок.
 
 Скриншоты снимаются с живого интерфейса скриптом `tools/screenshots.py`
 (нужен `pillow` только для разработки).
@@ -89,7 +120,7 @@ Client Health Score по каждому клиенту: сигнал, SNR, CCQ, 
 
 ## Установка / Installation
 
-Требуется Python 3.11+ и доступ к MikroTik по RouterOS API.
+Требуется Python 3.11+. Для универсального оборудования нужен SNMP; RouterOS API требуется только для прежних Wi-Fi-инструментов.
 *Requires Python 3.11+ and RouterOS API access to a MikroTik device.*
 
 ### Windows

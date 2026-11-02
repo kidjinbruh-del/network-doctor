@@ -114,7 +114,7 @@
         <td>{{ item.signal_dbm if item.signal_dbm is not none else "—" }} dBm</td>
         <td>{{ item.snr_db if item.snr_db is not none else "—" }} dB</td>
         <td>{{ item.ccq if item.ccq is not none else "—" }}%</td>
-        <td><div class="score"><span class="{{ item.health.state }}">{{ item.health.score }}</span><div class="bar"><span style="width:{{ item.health.score }}%"></span></div></div></td>
+        <td><div class="score"><span class="{{ item.health.state }}">{{ item.health.score if item.health.score is not none else "—" }}</span><div class="bar"><span style="width:{{ item.health.score if item.health.score is not none else 0 }}%"></span></div></div></td>
         <td>{{ item.health.reasons|join("; ") if item.health.reasons else "—" }}</td>
       </tr>
     {% endfor %}

@@ -36,6 +36,12 @@ def test_missing_noise_does_not_crash_scoring() -> None:
     assert any("SNR неизвестен" in reason for reason in result.reasons)
 
 
+def test_no_measurements_is_unknown_not_100_percent_healthy():
+    result=calculate_health(None,None,None)
+    assert result.score is None and result.state=='unknown'
+    assert result.color=='#8fa3bf'
+
+
 def test_snr_helper() -> None:
     assert calculate_snr(-60, -95) == 35.0
     assert calculate_snr(None, -95) is None

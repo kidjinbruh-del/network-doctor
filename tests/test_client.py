@@ -56,8 +56,15 @@ class FakeApi:
 
 
 class ClientTests(unittest.TestCase):
+    def test_default_collection_does_not_run_active_radio_scan(self):
+        client=MikroTikClient('192.0.2.1','readonly','secret')
+        fake=FakeApi(wireless=[{'name':'wlan1','channel':'2412'}]);client._api=fake
+        snapshot=client.collect_snapshot('office')
+        self.assertEqual(fake.binary.calls,[])
+        self.assertEqual(snapshot['spectral_scan']['method'],'disabled')
+
     def test_collect_snapshot(self) -> None:
-        client = MikroTikClient("192.0.2.1", "admin", "secret")
+        client = MikroTikClient("192.0.2.1", "admin", "secret", active_tests=True)
         fake = FakeApi(wireless=[{"name": "wlan1", "channel": "2412/20-Ce/gn"}])
         client._api = fake
 

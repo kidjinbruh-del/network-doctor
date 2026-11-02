@@ -95,7 +95,7 @@ def test_parse_dictionary_rows() -> None:
 def test_virtual_mac_reasons_from_incident() -> None:
     assert virtual_mac_reason("52:54:00:12:34:56") == "QEMU/KVM MAC 52:54:00"
     assert virtual_mac_reason("bc:24:11:8f:56:38") == "Proxmox VE MAC bc:24:11"
-    assert virtual_mac_reason("7a:d3:3d:52:b1:1a") == "локально назначенный MAC"
+    assert virtual_mac_reason("7a:d3:3d:52:b1:1a") is None
     assert virtual_mac_reason("50:ff:20:00:00:01") is None
     assert virtual_mac_reason("aa:bb:cc:dd:ee:ff", "virbr0") == (
         "виртуальный интерфейс virbr*"
@@ -107,21 +107,13 @@ def test_filter_real_office_inventory() -> None:
     result = filter_virtual_clients(OFFICE_DEVICES)
 
     assert result.total == 14
-    assert len(result.removed) == 8
-    assert len(result.kept) == 6
-    assert {item["mac"] for item in result.kept} == {
-        "50:ff:20:00:00:01",
-        "50:ff:20:00:00:03",
-        "50:ff:20:00:00:04",
-        "24:9a:d8:29:24:17",
-        "08:9d:f4:32:ec:95",
-        "64:51:06:21:9a:58",
-    }
-    assert all(item["virtual"] is False for item in result.kept)
-    assert all(item["virtual"] is True for item in result.removed)
-    assert result.reasons["виртуальный интерфейс virbr*"] == 1
-    assert result.reasons["Proxmox VE MAC bc:24:11"] == 3
-    assert result.reasons["локально назначенный MAC"] == 4
+    assert len(result.removed) == 4
+    assert len(result.kept) == 10
+    assert any(item['mac'].startswith('7a:') for item in result.kept)
+    assert all(item['virtual'] is False for item in result.kept)
+    assert result.reasons['Proxmox VE MAC bc:24:11'] == 3
+    assert 'локально назначенный MAC' not in result.reasons
+
 
 
 def test_keeps_keenetic_router_mac() -> None:

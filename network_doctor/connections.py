@@ -21,12 +21,13 @@ DEFAULT_PORTS = {"api": 8728, "api_ssl": 8729, "ssh": 22}
 
 @dataclass(frozen=True)
 class ConnectionConfig:
-    connection_type: str = "api"
+    connection_type: str = "api_ssl"
     host: str = ""
-    port: int = 8728
+    port: int = 8729
     username: str = "admin"
     password: str = ""
-    ssl_verify: bool = False
+    ssl_verify: bool = True
+    ca_file: str = ""
     ssh_host: str = ""
     ssh_port: int = 22
     ssh_user: str = ""
@@ -40,10 +41,12 @@ class ConnectionConfig:
         return CONNECTION_NAMES.get(self.connection_type, self.connection_type)
 
     def validate(self) -> None:
+        if self.connection_type not in DEFAULT_PORTS:
+            raise ValueError("Неизвестный тип подключения")
         if not self.host.strip():
             raise ValueError("Укажите IP-адрес роутера или SSH-сервера.")
         if not self.username.strip():
-            raise ValueError("Укажите логин администратора.")
+            raise ValueError("Укажите пользователя с правом чтения.")
         if not 1 <= int(self.port) <= 65535:
             raise ValueError("Порт должен быть числом от 1 до 65535.")
         if self.connection_type == "ssh":
@@ -171,6 +174,7 @@ def open_client(config: ConnectionConfig) -> Iterator[MikroTikClient]:
         port=config.port,
         use_ssl=config.connection_type == "api_ssl",
         ssl_verify=config.ssl_verify,
+        ca_file=config.ca_file,
         timeout=config.timeout,
     )
     try:

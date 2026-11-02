@@ -85,3 +85,4 @@ dist/
 
 # Local tooling
 .deep-copilot/
+test-results/

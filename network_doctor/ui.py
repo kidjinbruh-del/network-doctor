@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import threading
+import queue
 from datetime import datetime
 from pathlib import Path
 from tkinter import PhotoImage, filedialog, messagebox, simpledialog
@@ -88,7 +89,7 @@ class NetworkDoctorApp(ctk.CTk):
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("dark-blue")
 
-        self.title("Network Doctor — MikroTik Wi-Fi")
+        self.title("Network Doctor — оборудование и диагностика")
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         width = min(1240, max(820, screen_width - 60))
@@ -105,6 +106,8 @@ class NetworkDoctorApp(ctk.CTk):
         self.profile_store = ProfileStore()
         self.monitor: MonitorService | None = None
         self._busy = False
+        self._closing = False
+        self._callbacks = queue.SimpleQueue()
         self._last_comparison: tuple[
             dict[str, Any], dict[str, Any], list[MetricRow]
         ] | None = None
@@ -124,6 +127,7 @@ class NetworkDoctorApp(ctk.CTk):
         self._build_status_bar()
 
         self._log("Network Doctor запущен.")
+        self._callback_timer = self.after(100, self._drain_callbacks)
         self.after(200, self._refresh_snapshot_lists)
         self.after(300, self._load_latest_health)
         self.after(320, self._refresh_baseline_status)
@@ -168,7 +172,7 @@ class NetworkDoctorApp(ctk.CTk):
 
         subtitle = ctk.CTkLabel(
             header,
-            text="Диагностика MikroTik Wi-Fi: снимки, шум эфира и сравнение офиса с лабораторией",
+            text="Сетевое оборудование разных производителей · история · инциденты · Wi-Fi",
             anchor="w",
             text_color=MUTED,
             font=ctk.CTkFont(family="Segoe UI", size=13),
@@ -177,7 +181,7 @@ class NetworkDoctorApp(ctk.CTk):
 
         badge = ctk.CTkLabel(
             header,
-            text="RouterOS API",
+            text="SNMPv3 · RouterOS",
             width=150,
             height=32,
             corner_radius=10,
@@ -203,6 +207,11 @@ class NetworkDoctorApp(ctk.CTk):
         )
         self.tabview.grid(row=1, column=0, sticky="nsew", padx=24, pady=(0, 12))
 
+        equipment = self.tabview.add("Оборудование")
+        equipment.grid_columnconfigure(0,weight=1);equipment.grid_rowconfigure(0,weight=1)
+        from .fleet_ui import FleetPanel
+        self.fleet_panel=FleetPanel(equipment)
+        self.fleet_panel.grid(row=0,column=0,sticky="nsew")
         connection = self.tabview.add("Подключение")
         diagnostics = self.tabview.add("Диагностика")
         health = self.tabview.add("Здоровье")
@@ -214,7 +223,7 @@ class NetworkDoctorApp(ctk.CTk):
         self._build_health_tab(health)
         self._build_monitoring_tab(monitoring)
         self._build_comparison_tab(comparison)
-        self.tabview.set("Подключение")
+        self.tabview.set("Оборудование")
 
     def _build_connection_tab(self, tab: ctk.CTkFrame) -> None:
         tab.grid_columnconfigure(0, weight=1)
@@ -266,7 +275,7 @@ class NetworkDoctorApp(ctk.CTk):
         self.connection_type.grid(
             row=3, column=0, columnspan=2, sticky="ew", padx=24, pady=(0, 14)
         )
-        self.connection_type.set("API")
+        self.connection_type.set("API-SSL")
 
         self._field_label(card, 4, "Профиль подключения")
         profile_frame = ctk.CTkFrame(card, fg_color="transparent")
@@ -318,8 +327,8 @@ class NetworkDoctorApp(ctk.CTk):
         )
         self.port_entry = self._entry_row(card, 8, "Порт API / SSH", "8728")
         self.port_entry.insert(0, "8728")
-        self.user_entry = self._entry_row(card, 10, "Логин администратора", "admin")
-        self.user_entry.insert(0, "admin")
+        self.user_entry = self._entry_row(card, 10, "Пользователь с правом чтения", "readonly")
+        self.user_entry.insert(0, "readonly")
 
         self._field_label(card, 12, "Пароль")
         password_frame = ctk.CTkFrame(card, fg_color="transparent")
@@ -361,9 +370,12 @@ class NetworkDoctorApp(ctk.CTk):
             font=ctk.CTkFont(family="Segoe UI", size=12),
         )
         self.ssl_verify.grid(
-            row=14, column=0, columnspan=2, sticky="w", padx=24, pady=(0, 10)
+            row=14, column=0, sticky="w", padx=24, pady=(0, 10)
         )
         self.ssl_verify.grid_remove()
+        self.ssl_verify.select()
+        self.ca_entry=ctk.CTkEntry(card,placeholder_text="CA PEM (необязательно для публичной CA)")
+        self.ca_entry.grid(row=14,column=1,sticky="ew",padx=24,pady=(0,10))
 
         self.ssh_frame = ctk.CTkFrame(card, fg_color=BG, corner_radius=12)
         self.ssh_frame.grid(
@@ -420,7 +432,7 @@ class NetworkDoctorApp(ctk.CTk):
         )
 
         self._refresh_profiles()
-        self._on_connection_type_changed("API")
+        self._on_connection_type_changed("API-SSL")
 
     def _tab_body(self, tab: ctk.CTkFrame) -> ctk.CTkScrollableFrame:
         body = ctk.CTkScrollableFrame(
@@ -1167,7 +1179,7 @@ class NetworkDoctorApp(ctk.CTk):
             score_frame.grid_columnconfigure(1, weight=1)
             ctk.CTkLabel(
                 score_frame,
-                text=str(result.score),
+                text=str(result.score) if result.score is not None else "—",
                 width=30,
                 text_color=result.color,
                 font=ctk.CTkFont(family="Consolas", size=12, weight="bold"),
@@ -1180,7 +1192,7 @@ class NetworkDoctorApp(ctk.CTk):
                 fg_color=BORDER,
             )
             progress.grid(row=0, column=1, sticky="ew")
-            progress.set(result.score / 100)
+            progress.set((result.score or 0) / 100)
 
             ctk.CTkLabel(
                 frame,
@@ -1235,10 +1247,7 @@ class NetworkDoctorApp(ctk.CTk):
     def _monitor_on_snapshot(
         self, snapshot: dict[str, Any], snapshot_id: int, delay: int
     ) -> None:
-        self.after(
-            0,
-            lambda: self._monitor_snapshot_ui(snapshot, snapshot_id, delay),
-        )
+        self._post(lambda: self._monitor_snapshot_ui(snapshot, snapshot_id, delay))
 
     def _monitor_snapshot_ui(
         self, snapshot: dict[str, Any], snapshot_id: int, delay: int
@@ -1255,7 +1264,7 @@ class NetworkDoctorApp(ctk.CTk):
         self._log(f"Мониторинг: сохранён снимок #{snapshot_id}.")
 
     def _monitor_on_error(self, message: str, delay: int) -> None:
-        self.after(0, lambda: self._monitor_error_ui(message, delay))
+        self._post(lambda: self._monitor_error_ui(message, delay))
 
     def _monitor_error_ui(self, message: str, delay: int) -> None:
         self.monitor_status.configure(
@@ -1316,7 +1325,20 @@ class NetworkDoctorApp(ctk.CTk):
         canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         self._timeline_canvas = canvas
 
+    def _post(self, callback):
+        if not self._closing:self._callbacks.put(callback)
+
+    def _drain_callbacks(self):
+        if self._closing:return
+        while not self._callbacks.empty():
+            try:self._callbacks.get()()
+            except Exception as error:self._failed(str(error))
+        self._callback_timer=self.after(100,self._drain_callbacks)
+
     def _on_close(self) -> None:
+        self._closing=True
+        self.after_cancel(self._callback_timer)
+        self.fleet_panel.close()
         if self.monitor is not None:
             self.monitor.stop(timeout=2)
         try:
@@ -1331,8 +1353,10 @@ class NetworkDoctorApp(ctk.CTk):
         self.port_entry.insert(0, str(DEFAULT_PORTS[kind]))
         if kind == "api_ssl":
             self.ssl_verify.grid()
+            self.ca_entry.grid()
         else:
             self.ssl_verify.grid_remove()
+            self.ca_entry.grid_remove()
         if kind == "ssh":
             self.ssh_frame.grid()
         else:
@@ -1359,6 +1383,7 @@ class NetworkDoctorApp(ctk.CTk):
             username=username,
             password=password,
             ssl_verify=bool(self.ssl_verify.get()),
+            ca_file=self.ca_entry.get().strip(),
             ssh_host=host,
             ssh_port=ssh_port,
             ssh_user=self.ssh_user_entry.get().strip(),
@@ -1392,6 +1417,7 @@ class NetworkDoctorApp(ctk.CTk):
         _set_entry(self.port_entry, str(profile.port))
         _set_entry(self.user_entry, profile.username)
         self.ssl_verify.select() if profile.ssl_verify else self.ssl_verify.deselect()
+        _set_entry(self.ca_entry,profile.ca_file)
         _set_entry(self.ssh_remote_host_entry, profile.ssh_remote_host)
         _set_entry(self.ssh_remote_port_entry, str(profile.ssh_remote_port))
         _set_entry(self.ssh_user_entry, profile.ssh_user)
@@ -1429,6 +1455,7 @@ class NetworkDoctorApp(ctk.CTk):
             port=config.port if config.connection_type != "ssh" else config.ssh_port,
             username=config.username,
             ssl_verify=config.ssl_verify,
+            ca_file=config.ca_file,
             ssh_host=config.ssh_host,
             ssh_port=config.ssh_port,
             ssh_user=config.ssh_user,
@@ -1859,9 +1886,9 @@ class NetworkDoctorApp(ctk.CTk):
                 result = action()
             except Exception as exc:
                 message = str(exc) or exc.__class__.__name__
-                self.after(0, lambda message=message: self._failed(message))
+                self._post(lambda message=message: self._failed(message))
             else:
-                self.after(0, lambda result=result: self._succeeded(result, success))
+                self._post(lambda result=result: self._succeeded(result, success))
 
         threading.Thread(target=worker, daemon=True).start()
 

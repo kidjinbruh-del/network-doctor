@@ -68,7 +68,8 @@ class MonitorService:
         thread = self._thread
         if thread is not None:
             thread.join(timeout=timeout)
-        self._thread = None
+        if thread is None or not thread.is_alive():
+            self._thread = None
 
     def _run(self, config: ConnectionConfig) -> None:
         failures = 0

@@ -21,15 +21,15 @@ def test_office_sample_matches_incident_expectations() -> None:
 
     filtered = filter_virtual_clients(snapshot["clients"])
     assert len(snapshot["clients"]) == 23
-    assert len(filtered.kept) == 14
-    assert len(filtered.removed) == 9
+    assert len(filtered.kept) == 20
+    assert len(filtered.removed) == 3
     assert filtered.reasons["Proxmox VE MAC bc:24:11"] == 3
-    assert filtered.reasons["локально назначенный MAC"] == 6
+    assert sum(item["locally_administered"] for item in filtered.kept) == 6
 
     rows = health_rows(snapshot)
-    assert len(rows) == 14
+    assert len(rows) == 20
     assert all(row["health"].state == "red" for row in rows)
 
     diagnosis = diagnose_no_internet(snapshot)
     assert diagnosis.verdict == VERDICT_BEHIND_KEENETIC
-    assert diagnosis.severity == "critical"
+    assert diagnosis.severity == "warning"

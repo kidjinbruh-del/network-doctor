@@ -1,0 +1,17 @@
+groups:
+  - name: network-doctor
+    rules:
+      - alert: NetworkDoctorCollectorUnavailable
+        expr: up{job="network-doctor"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Network Doctor metrics endpoint is unavailable
+      - alert: NetworkDoctorDevicePollFailed
+        expr: nd_equipment_up{job="network-doctor"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Device collection is failing or stale (not proof of power loss)

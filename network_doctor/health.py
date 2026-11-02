@@ -26,7 +26,7 @@ SIGNAL_MAX_PENALTY = 25
 class HealthResult:
     """Integral client health score and the reasons behind it."""
 
-    score: int
+    score: int | None
     state: str
     label: str
     signal_dbm: float | None
@@ -41,7 +41,7 @@ class HealthResult:
 
     @property
     def color(self) -> str:
-        return {"red": "#f87171", "yellow": "#fbbf24", "green": "#34d399"}[self.state]
+        return {"red": "#f87171", "yellow": "#fbbf24", "green": "#34d399", "unknown":"#8fa3bf"}[self.state]
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -103,6 +103,8 @@ def calculate_health(
         for value in (loss_value, jitter_value, latency_value)
     )
     snr = calculate_snr(signal, noise)
+    if all(value is None for value in (signal,ccq_value,retry_value,loss_value,jitter_value,latency_value)):
+        return HealthResult(None,'unknown','Нет данных',signal,noise,snr,ccq_value,retry_value,('Нет измерений для оценки',))
 
     if not network_mode:
         if snr is None:
@@ -204,8 +206,10 @@ def health_rows(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
         clients = snapshot.get("registration_table", [])
     rows: list[dict[str, Any]] = []
     for client in clients or []:
-        if not isinstance(client, dict) or client.get("virtual"):
+        if not isinstance(client, dict):
             continue
+        from .parser import virtual_mac_reason
+        if virtual_mac_reason(client.get('mac'),client.get('interface')):continue
         result = calculate_client_health(client, health, noise)
         rows.append(
             {
@@ -218,7 +222,7 @@ def health_rows(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
                 "health": result,
             }
         )
-    rows.sort(key=lambda item: (item["health"].score, item["signal_dbm"] or -999))
+    rows.sort(key=lambda item: (item["health"].score if item["health"].score is not None else -1, item["signal_dbm"] or -999))
     return rows
 
 
@@ -234,12 +238,12 @@ def recommendations(result: HealthResult) -> list[str]:
     if result.signal_dbm is not None and result.signal_dbm < -75:
         items.append("Приблизить клиента к точке доступа или проверить антенну.")
     if result.loss_pct is not None and result.loss_pct >= 1:
-        items.append("Проверить потери до 8.8.8.8 и загрузку канала 4 (2,4 ГГц).")
+        items.append("Проверить потери до целевого узла и загрузку используемого канала.")
     if result.jitter_ms is not None and result.jitter_ms >= 30:
         items.append("Проверить джиттер на WAN Keenetic и загрузку эфира.")
     if result.latency_ms is not None and result.latency_ms >= 120:
         items.append("Проверить задержку WAN/PPPoE и приоритеты трафика.")
-    if not items and result.score <= 80:
+    if not items and (result.score is None or result.score <= 80):
         items.append("Проверить клиента вручную: доступных метрик недостаточно.")
     return items
 

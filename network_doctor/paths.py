@@ -6,12 +6,14 @@ from pathlib import Path
 
 def app_data_dir() -> Path:
     """Return the per-user directory for Network Doctor state."""
-    if os.name == "nt":
+    if os.environ.get('NETWORK_DOCTOR_DATA_DIR'):
+        path=Path(os.environ['NETWORK_DOCTOR_DATA_DIR']).expanduser().resolve()
+    elif os.name == "nt":
         base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
         path = base / "NetworkDoctor"
     else:
-        path = Path.home() / ".local" / "share" / "network-doctor"
-    path.mkdir(parents=True, exist_ok=True)
+        path = Path(os.environ.get('XDG_DATA_HOME',str(Path.home()/'.local'/'share'))) / 'network-doctor'
+    path.mkdir(parents=True, exist_ok=True,mode=0o700)
     return path
 
 

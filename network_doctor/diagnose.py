@@ -14,9 +14,9 @@ KEENETIC_MAC_PREFIX = "50:ff:20"
 # WAN address was a private address of the MikroTik LAN, and its management
 # ports 22/80/443/8291 were closed from the MikroTik-side LAN.
 VERDICT_BEHIND_KEENETIC = (
-    "Проблема за Keenetic. Проверьте его WAN-статус вручную."
+    "Keenetic обнаружен, но доступ к управлению не подтверждён. Причина отсутствия интернета не установлена."
 )
-VERDICT_KEENETIC_DOWN = "Keenetic не отвечает. Проверьте кабель/питание."
+VERDICT_KEENETIC_DOWN = "Доступность Keenetic не подтверждена по ARP. Проверьте кабель, питание и ограничения сети."
 
 
 @dataclass(frozen=True)
@@ -88,6 +88,10 @@ def diagnose_no_internet(snapshot: Mapping[str, Any]) -> Diagnosis:
     checks.append(_arp_check(keenetic_ip, arp))
     checks.append(_ports_check(ports, closed_ports))
 
+    if not route.get('known',True):
+        return Diagnosis('Недостаточно данных для определения причины. Проверьте права чтения и сбор маршрутов.',
+                         'warning',tuple(checks),('Повторить сбор доступных таблиц без активных тестов.',))
+
     if not route["present"] or not route["active"]:
         return Diagnosis(
             verdict=(
@@ -113,7 +117,7 @@ def diagnose_no_internet(snapshot: Mapping[str, Any]) -> Diagnosis:
     if arp is None or not arp["complete"]:
         return Diagnosis(
             verdict=VERDICT_KEENETIC_DOWN,
-            severity="critical",
+            severity="warning",
             checks=tuple(checks),
             actions=(
                 "Проверить кабель между MikroTik и Keenetic.",
@@ -138,15 +142,15 @@ def diagnose_no_internet(snapshot: Mapping[str, Any]) -> Diagnosis:
             )
         return Diagnosis(
             verdict=VERDICT_BEHIND_KEENETIC,
-            severity="critical",
+            severity="warning",
             checks=tuple(checks),
             actions=tuple(actions),
         )
 
     if nat["growing"] is False:
         return Diagnosis(
-            verdict="NAT MikroTik не пропускает новый трафик. Проверьте NAT и маршрут.",
-            severity="critical",
+            verdict="Счётчик NAT не вырос. Без контрольного трафика это не доказывает неисправность NAT.",
+            severity="warning",
             checks=tuple(checks),
             actions=(
                 "Проверить /ip firewall nat и счётчики masquerade.",
@@ -156,15 +160,15 @@ def diagnose_no_internet(snapshot: Mapping[str, Any]) -> Diagnosis:
 
     return Diagnosis(
         verdict=(
-            "MikroTik и Keenetic отвечают, NAT работает. Проверьте DNS и "
-            "настройки Wi-Fi клиентов."
+            "Получены данные маршрута, ARP и счётчиков. Работоспособность интернета "
+            "этим не доказана: проверьте назначенные DNS и соединение с клиента."
         ),
         severity="warning",
         checks=tuple(checks),
         actions=(
-            "Проверить DNS 77.88.8.8 / 77.88.55.88.",
+            "Проверить DNS, назначенные клиенту через DHCP.",
             "Проверить, что клиенты получают IP и шлюз от Keenetic.",
-            "Проверить загрузку канала 4 (2,4 ГГц).",
+            "Проверить загрузку используемого радиоканала.",
         ),
     )
 
@@ -189,6 +193,8 @@ def apply_nat_delta(
 
 
 def _route_check(route: Mapping[str, Any]) -> DiagnosticCheck:
+    if not route.get('known',True):
+        return DiagnosticCheck(name='Маршрут по умолчанию',status='unknown',summary='данные маршрута не получены')
     if not route["present"]:
         return DiagnosticCheck(
             name="Маршрут по умолчанию",
@@ -228,7 +234,7 @@ def _nat_check(nat: Mapping[str, Any]) -> DiagnosticCheck:
     if nat["growing"] is False:
         return DiagnosticCheck(
             name="Счётчики NAT",
-            status="fail",
+            status="warn",
             summary="не растут",
             details=tuple(details),
         )
@@ -257,7 +263,7 @@ def _arp_check(ip: str, arp: Mapping[str, Any] | None) -> DiagnosticCheck:
     return DiagnosticCheck(
         name=f"ARP до Keenetic ({ip})",
         status="ok",
-        summary="отвечает",
+        summary="запись ARP есть; она может быть устаревшей",
         details=(f"MAC: {arp['mac'] or '—'}",),
     )
 
@@ -312,10 +318,11 @@ def _default_route(snapshot: Mapping[str, Any]) -> dict[str, Any]:
                 route = item
                 break
     if not route:
-        return {"present": False, "active": False, "gateway": ""}
+        return {"present": False, "active": False, "gateway": "", "known":isinstance(snapshot.get('routes'),list)}
     present = route.get("present")
     active = route.get("active")
     return {
+        "known": route.get('known',True),
         "present": True if present is None else _truthy(present),
         "active": _truthy(active) if active is not None else True,
         "gateway": as_text(route.get("gateway") or route.get("gateway-interface")),
