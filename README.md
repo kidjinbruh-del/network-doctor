@@ -2,7 +2,6 @@
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)
 ![CI](https://github.com/kidjinbruh-del/network-doctor/actions/workflows/ci.yml/badge.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)
 
 Network Doctor для Windows и Linux: общий парк управляемых устройств через
@@ -250,7 +249,7 @@ network-doctor/
 
 ## Лицензия / License
 
-[MIT](LICENSE) © 2026 kidjinbruh-del
+Все права защищены. См. [LICENSE](LICENSE).
 
 ## Contributing
 
